@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delivery Address Form</title>
+    <style>
+        .form-container { max-width: 600px; margin: 20px auto; }
+        label { display: block; margin: 10px 0 5px; }
+        input, textarea { width: 100%; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="addressForm">
+            <div>
+                <label>Transaction No:</label>
+                <input type="text" id="transactionNo" readonly>
+            </div>
+            <div>
+                <label>Recipient Name:</label>
+                <input type="text" id="recipientName" required>
+            </div>
+            <div>
+                <label>Phone Number:</label>
+                <input type="tel" id="phone" required>
+            </div>
+            <div>
+                <label>Address:</label>
+                <textarea id="address" required></textarea>
+            </div>
+            <div>
+                <label>Sub-district:</label>
+                <input type="text" id="subDistrict" required>
+            </div>
+            <div>
+                <label>District:</label>
+                <input type="text" id="district" required>
+            </div>
+            <div>
+                <label>Province:</label>
+                <input type="text" id="province" required>
+            </div>
+            <div>
+                <label>Postal Code:</label>
+                <input type="text" id="postalCode" required>
+            </div>
+            <button type="submit">Submit Address</button>
+        </form>
+    </div>
+
+    <script>
+        // Get Transaction No from URL parameter
+        function getTransactionNoFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('transactionNo') || '';
+        }
+
+        // Initialize form with Transaction No
+        document.addEventListener('DOMContentLoaded', () => {
+            const transactionNo = getTransactionNoFromURL();
+            document.getElementById('transactionNo').value = transactionNo;
+        });
+
+        // Form submission
+        document.getElementById('addressForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxgHTWZ-8ybzrTeDcmUz49fMUJYfJMoG58BDwQqNZlXraL3L9-Be9llGvo4neAci3mWpw/exec'; // Replace with your GAS URL
+            
+            const data = {
+                transactionNo: document.getElementById('transactionNo').value,
+                recipientName: document.getElementById('recipientName').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                subDistrict: document.getElementById('subDistrict').value,
+                district: document.getElementById('district').value,
+                province: document.getElementById('province').value,
+                postalCode: document.getElementById('postalCode').value
+            };
+
+            try {
+                const response = await fetch(scriptURL + '?action=saveAddress', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Address saved successfully!');
+                    document.getElementById('addressForm').reset();
+                    document.getElementById('transactionNo').value = getTransactionNoFromURL();
+                } else {
+                    alert('Error saving address');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
