@@ -6,10 +6,13 @@
         .form-container { max-width: 600px; margin: 20px auto; }
         label { display: block; margin: 10px 0 5px; }
         input, textarea { width: 100%; padding: 5px; }
+        #errorMessage { color: red; display: none; margin: 10px 0; }
+        #addressForm { display: none; }
     </style>
 </head>
 <body>
     <div class="form-container">
+        <div id="errorMessage">เลข Transaction No. ไม่ถูกต้อง</div>
         <form id="addressForm">
             <div>
                 <label>Transaction No:</label>
@@ -54,17 +57,36 @@
             return urlParams.get('transactionNo') || '';
         }
 
-        // Initialize form with Transaction No
-        document.addEventListener('DOMContentLoaded', () => {
+        // Check Transaction No validity
+        async function checkTransactionNo() {
             const transactionNo = getTransactionNoFromURL();
             document.getElementById('transactionNo').value = transactionNo;
-        });
+            
+            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // Replace with your GAS URL
+            
+            try {
+                const response = await fetch(scriptURL + '?action=checkTransaction&transactionNo=' + encodeURIComponent(transactionNo));
+                const result = await response.text();
+                
+                if (result === 'Valid') {
+                    document.getElementById('addressForm').style.display = 'block';
+                    document.getElementById('errorMessage').style.display = 'none';
+                } else {
+                    document.getElementById('addressForm').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('addressForm').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
 
         // Form submission
         document.getElementById('addressForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbxgHTWZ-8ybzrTeDcmUz49fMUJYfJMoG58BDwQqNZlXraL3L9-Be9llGvo4neAci3mWpw/exec'; // Replace with your GAS URL
+            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // Replace with your GAS URL
             
             const data = {
                 transactionNo: document.getElementById('transactionNo').value,
@@ -94,6 +116,9 @@
                 alert('Error: ' + error.message);
             }
         });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', checkTransactionNo);
     </script>
 </body>
 </html>
