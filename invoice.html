@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Form</title>
+    <style>
+        .product-entry { margin-bottom: 10px; }
+        .form-container { max-width: 800px; margin: 20px auto; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="invoiceForm">
+            <div>
+                <label>User Name:</label><br>
+                <input type="text" id="userName" required><br>
+            </div>
+            <div>
+                <label>Platform:</label><br>
+                <select id="platform" required></select><br>
+            </div>
+            <div>
+                <label>Transaction No:</label><br>
+                <input type="text" id="transactionNo" readonly><br>
+            </div>
+            <div id="productsContainer">
+                <label>Product List:</label><br>
+                <div class="product-entry">
+                    <select class="productSelect"></select>
+                    <input type="number" class="quantity" min="1" placeholder="Quantity">
+                    <input type="number" class="price" readonly>
+                </div>
+            </div>
+            <button type="button" onclick="addProduct()">Add Product</button><br>
+            <div>
+                <label>Postage Price:</label><br>
+                <input type="number" id="postagePrice" min="0" required><br>
+            </div>
+            <div>
+                <label>Total Price:</label><br>
+                <input type="number" id="totalPrice" readonly><br>
+            </div>
+            <div>
+                <label>Discount:</label><br>
+                <input type="number" id="discount" min="0" value="0" required><br>
+            </div>
+            <div>
+                <label>Net Price:</label><br>
+                <input type="number" id="netPrice" readonly><br>
+            </div>
+            <button type="submit">Save</button>
+        </form>
+    </div>
+
+    <script>
+        let productsData = [];
+        
+        // Generate Transaction No
+        function generateTransactionNo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const seconds = String(now.getSeconds() + now.getMinutes() * 60).padStart(4, '0');
+            return `DM${year}${month}${day}${seconds}`;
+        }
+
+        // Load initial data
+        async function loadData() {
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzRA9fcRkNdt-YTj4yXqIOq_A1MEaqAnDjf6rypYF9u_8rM-ul31DoaOaZszo9JiTog4A/exec'; // Replace with your GAS URL
+            const response = await fetch(scriptURL + '?action=getData');
+            const data = await response.json();
+
+            // Populate platforms
+            const platformSelect = document.getElementById('platform');
+            data.platforms.forEach(platform => {
+                const option = document.createElement('option');
+                option.value = platform;
+                option.text = platform;
+                platformSelect.appendChild(option);
+            });
+
+            // Store products data and populate first product select
+            productsData = data.products;
+            populateProductSelect(document.querySelector('.productSelect'));
+            
+            // Set transaction number
+            document.getElementById('transactionNo').value = generateTransactionNo();
+        }
+
+        function populateProductSelect(selectElement) {
+            productsData.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.name;
+                option.text = product.name;
+                option.dataset.price = product.price;
+                selectElement.appendChild(option);
+            });
+        }
+
+        function addProduct() {
+            const container = document.getElementById('productsContainer');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'product-entry';
+            newEntry.innerHTML = `
+                <select class="productSelect"></select>
+                <input type="number" class="quantity" min="1" placeholder="Quantity">
+                <input type="number" class="price" readonly>
+            `;
+            container.appendChild(newEntry);
+            populateProductSelect(newEntry.querySelector('.productSelect'));
+            addEventListeners();
+        }
+
+        function calculatePrices() {
+            let total = 0;
+            document.querySelectorAll('.product-entry').forEach(entry => {
+                const select = entry.querySelector('.productSelect');
+                const quantity = parseInt(entry.querySelector('.quantity').value) || 0;
+                const price = parseFloat(select.options[select.selectedIndex].dataset.price) || 0;
+                const subtotal = price * quantity;
+                entry.querySelector('.price').value = subtotal;
+                total += subtotal;
+            });
+
+            const postage = parseFloat(document.getElementById('postagePrice').value) || 0;
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            
+            document.getElementById('totalPrice').value = total + postage;
+            document.getElementById('netPrice').value = total + postage - discount;
+        }
+
+        function addEventListeners() {
+            document.querySelectorAll('.productSelect, .quantity, #postagePrice, #discount')
+                .forEach(element => {
+                    element.addEventListener('change', calculatePrices);
+                });
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzRA9fcRkNdt-YTj4yXqIOq_A1MEaqAnDjf6rypYF9u_8rM-ul31DoaOaZszo9JiTog4A/exec'; // Replace with your GAS URL
+            
+            const products = Array.from(document.querySelectorAll('.product-entry')).map(entry => ({
+                name: entry.querySelector('.productSelect').value,
+                quantity: entry.querySelector('.quantity').value,
+                price: entry.querySelector('.price').value
+            }));
+
+            const data = {
+                userName: document.getElementById('userName').value,
+                platform: document.getElementById('platform').value,
+                transactionNo: document.getElementById('transactionNo').value,
+                products: products,
+                postagePrice: document.getElementById('postagePrice').value,
+                totalPrice: document.getElementById('totalPrice').value,
+                discount: document.getElementById('discount').value,
+                netPrice: document.getElementById('netPrice').value,
+                timestamp: new Date().toISOString()
+            };
+
+            await fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            alert('Data saved successfully!');
+        });
+
+        // Initialize
+        loadData();
+        addEventListeners();
+    </script>
+</body>
+</html>
