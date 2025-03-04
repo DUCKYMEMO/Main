@@ -96,7 +96,7 @@
             const transactionNo = getTransactionNoFromURL();
             document.getElementById('transactionNo').value = transactionNo;
             
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbwOzRisKqgOKh_CMx24vf-ZjJ_GkyA83ykznU6de39FQwbm5Bzky2kQW1El6AJBe_nq/exec'; // แทนที่ด้วย URL ของ GAS
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzUkTEt-SrPPVnZo5hpQkVxRETNhAEKjrU71DqbLdefzY1VOsf0kvarcIJQxvVL7dGhNQ/exec'; // แทนที่ด้วย URL ของ GAS
             
             try {
                 const response = await fetch(scriptURL + '?action=checkTransaction&transactionNo=' + encodeURIComponent(transactionNo));
@@ -120,7 +120,7 @@
         document.getElementById('addressForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbwOzRisKqgOKh_CMx24vf-ZjJ_GkyA83ykznU6de39FQwbm5Bzky2kQW1El6AJBe_nq/exec'; // แทนที่ด้วย URL ของ GAS
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzUkTEt-SrPPVnZo5hpQkVxRETNhAEKjrU71DqbLdefzY1VOsf0kvarcIJQxvVL7dGhNQ/exec'; // แทนที่ด้วย URL ของ GAS
             
             const data = {
                 transactionNo: document.getElementById('transactionNo').value,
