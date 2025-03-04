@@ -1,18 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Delivery Address Form</title>
+    <title>Delivery Address Form with LINE Login</title>
     <style>
         .form-container { max-width: 600px; margin: 20px auto; }
         label { display: block; margin: 10px 0 5px; }
         input, textarea { width: 100%; padding: 5px; }
         #errorMessage { color: red; display: none; margin: 10px 0; }
         #addressForm { display: none; }
+        #loginSection { margin: 20px 0; }
     </style>
+    <!-- เพิ่ม LINE SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
     <div class="form-container">
         <div id="errorMessage">เลข Transaction No. ไม่ถูกต้อง</div>
+        <div id="loginSection">
+            <button id="lineLoginBtn" onclick="loginWithLine()">Login with LINE</button>
+            <p id="userStatus"></p>
+        </div>
         <form id="addressForm">
             <div>
                 <label>Transaction No:</label>
@@ -51,6 +58,33 @@
     </div>
 
     <script>
+        let userId = null;
+
+        // Initialize LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: '2007002795-JaVm8loD' }); // แทนที่ด้วย LIFF ID ของคุณ
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    userId = profile.userId;
+                    document.getElementById('userStatus').textContent = `Logged in as: ${profile.displayName}`;
+                    document.getElementById('lineLoginBtn').style.display = 'none';
+                    checkTransactionNo();
+                } else {
+                    document.getElementById('userStatus').textContent = 'Please login with LINE';
+                }
+            } catch (error) {
+                console.error('LIFF Initialization failed:', error);
+            }
+        }
+
+        // Login with LINE
+        function loginWithLine() {
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            }
+        }
+
         // Get Transaction No from URL parameter
         function getTransactionNoFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -62,7 +96,7 @@
             const transactionNo = getTransactionNoFromURL();
             document.getElementById('transactionNo').value = transactionNo;
             
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbx1_swjlxRSm9GZjUqBE7UnxRWrCoq6-SJm03_2B90oShF1vYPGtefFXgbaGWVvc0d0HA/exec'; // Replace with your GAS URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbwTADlkZQI7PMRIvu_5Agk7yExUNgK3S0_Ey4NRsZsYUHayaZ-owXOEFLMrtkUqQk7Gzg/exec'; // แทนที่ด้วย URL ของ GAS
             
             try {
                 const response = await fetch(scriptURL + '?action=checkTransaction&transactionNo=' + encodeURIComponent(transactionNo));
@@ -86,7 +120,7 @@
         document.getElementById('addressForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // Replace with your GAS URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbwTADlkZQI7PMRIvu_5Agk7yExUNgK3S0_Ey4NRsZsYUHayaZ-owXOEFLMrtkUqQk7Gzg/exec'; // แทนที่ด้วย URL ของ GAS
             
             const data = {
                 transactionNo: document.getElementById('transactionNo').value,
@@ -96,7 +130,8 @@
                 subDistrict: document.getElementById('subDistrict').value,
                 district: document.getElementById('district').value,
                 province: document.getElementById('province').value,
-                postalCode: document.getElementById('postalCode').value
+                postalCode: document.getElementById('postalCode').value,
+                userId: userId // เพิ่ม UserID จาก LINE
             };
 
             try {
@@ -106,7 +141,7 @@
                 });
                 
                 if (response.ok) {
-                    alert('Address saved successfully!');
+                    alert('Address and LINE UserID saved successfully!');
                     document.getElementById('addressForm').reset();
                     document.getElementById('transactionNo').value = getTransactionNoFromURL();
                 } else {
@@ -118,7 +153,7 @@
         });
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', checkTransactionNo);
+        document.addEventListener('DOMContentLoaded', initializeLiff);
     </script>
 </body>
 </html>
