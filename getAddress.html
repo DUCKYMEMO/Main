@@ -62,7 +62,7 @@
             const transactionNo = getTransactionNoFromURL();
             document.getElementById('transactionNo').value = transactionNo;
             
-            const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // Replace with your GAS URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbx1_swjlxRSm9GZjUqBE7UnxRWrCoq6-SJm03_2B90oShF1vYPGtefFXgbaGWVvc0d0HA/exec'; // Replace with your GAS URL
             
             try {
                 const response = await fetch(scriptURL + '?action=checkTransaction&transactionNo=' + encodeURIComponent(transactionNo));
